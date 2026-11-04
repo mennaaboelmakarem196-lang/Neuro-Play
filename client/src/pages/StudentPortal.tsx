@@ -22,7 +22,7 @@ export default function StudentPortal() {
   const { user, logout } = useRbac();
   const [, navigate] = useLocation();
   const [launchGame, setLaunchGame] = useState(false);
-  const [lang, setLang] = useState<Lang>("en");
+  const { t, isRTL, lang } = useLanguage();
 
   useEffect(() => {
     const saved = localStorage.getItem("neuroplay-lang") as Lang | null;
@@ -46,6 +46,7 @@ export default function StudentPortal() {
 
   const xpPercent = Math.min(100, Math.round(((user.totalXP ?? 0) % 500) / 500 * 100));
   const isRtl = lang === "ar";
+  const fontFamily = lang === "ar" ? "'Cairo', 'Almarai', sans-serif" : "'Comfortaa', 'Poppins', sans-serif";
 
   return (
     <div
