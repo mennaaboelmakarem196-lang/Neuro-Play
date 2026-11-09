@@ -18,6 +18,7 @@ import { uploads, InsertUpload } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { parseCurriculumToQuests, ParsedCurriculum } from "../integrations/curriculumParser";
+import { extractTextFromPdfBuffer } from "../ai";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -240,3 +241,5 @@ export const filesRouter = router({
       return result[0] ?? null;
     }),
 });
+
+

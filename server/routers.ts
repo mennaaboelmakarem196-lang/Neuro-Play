@@ -194,6 +194,7 @@ export const appRouter = router({
       .input(z.object({
         topic: z.string().min(1),
         rawText: z.string().optional(),
+pdfBase64: z.string().optional(),
         learningStyle: z.enum(["ADHD Socratic", "Storytelling", "Bullet Points Only", "Gamified"]),
         difficulty: z.enum(["Easy", "Medium", "Boss Level"]),
       }))
@@ -301,3 +302,5 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+

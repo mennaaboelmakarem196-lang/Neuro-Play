@@ -1,11 +1,21 @@
-import { eq, desc } from "drizzle-orm";
+﻿import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, gameSessions, planetAttempts, uploads, InsertGameSession, InsertPlanetAttempt, InsertUpload } from "../drizzle/schema";
+import {
+  InsertUser,
+  users,
+  gameSessions,
+  planetAttempts,
+  uploads,
+  InsertGameSession,
+  InsertPlanetAttempt,
+  InsertUpload,
+  GameSession,
+  PlanetAttempt
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -25,7 +35,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
   const db = await getDb();
   if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
+    console.warn("[Database] Cannot upsert user: database not available (in-memory mode)");
     return;
   }
 
@@ -80,42 +90,73 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
   if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
     return undefined;
   }
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ─── In-Memory Fallback Storage ─────────────────────────────────────────────
+const inMemoryGameSessions: GameSession[] = [];
+let nextSessionId = 1;
+const inMemoryAttempts: PlanetAttempt[] = [];
+let nextAttemptId = 1;
 
 // ─── Game Session Helpers ─────────────────────────────────────────────────────
 
 export async function createGameSession(data: InsertGameSession) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    const id = nextSessionId++;
+    const session: any = {
+      id,
+      studentId: data.studentId,
+      studentName: data.studentName ?? "Space Explorer",
+      score: data.score ?? 0,
+      xp: data.xp ?? 0,
+      starsEarned: data.starsEarned ?? 0,
+      correctCount: data.correctCount ?? 0,
+      totalPlanets: data.totalPlanets ?? 8,
+      timeSpentSec: data.timeSpentSec ?? 0,
+      attentionDriftCount: data.attentionDriftCount ?? 0,
+      completed: data.completed ?? 0,
+      completedAt: data.completedAt ?? null,
+      createdAt: new Date(),
+    };
+    inMemoryGameSessions.push(session);
+    return id;
+  }
   const result = await db.insert(gameSessions).values(data);
   return result[0].insertId as number;
 }
 
 export async function updateGameSession(id: number, data: Partial<InsertGameSession>) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    const session = inMemoryGameSessions.find(s => s.id === id);
+    if (session) {
+      Object.assign(session, data);
+    }
+    return;
+  }
   await db.update(gameSessions).set(data).where(eq(gameSessions.id, id));
 }
 
 export async function getGameSession(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) {
+    return inMemoryGameSessions.find(s => s.id === id);
+  }
   const result = await db.select().from(gameSessions).where(eq(gameSessions.id, id)).limit(1);
   return result[0];
 }
 
 export async function getTopSessions(limit = 10) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) {
+    return inMemoryGameSessions.filter(s => s.completed === 1).slice(0, limit);
+  }
   return db.select().from(gameSessions)
     .where(eq(gameSessions.completed, 1))
     .limit(limit);
@@ -123,13 +164,28 @@ export async function getTopSessions(limit = 10) {
 
 export async function recordPlanetAttempt(data: InsertPlanetAttempt) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    const id = nextAttemptId++;
+    const attempt: any = {
+      id,
+      sessionId: data.sessionId,
+      planetName: data.planetName,
+      correct: data.correct ?? 0,
+      attemptNumber: data.attemptNumber ?? 1,
+      xpAwarded: data.xpAwarded ?? 0,
+      createdAt: new Date(),
+    };
+    inMemoryAttempts.push(attempt);
+    return id;
+  }
   const result = await db.insert(planetAttempts).values(data);
   return result[0].insertId as number;
 }
 
 export async function getSessionAttempts(sessionId: number) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) {
+    return inMemoryAttempts.filter(a => a.sessionId === sessionId);
+  }
   return db.select().from(planetAttempts).where(eq(planetAttempts.sessionId, sessionId));
 }

@@ -16,6 +16,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fireConfetti } from "@/lib/confetti";
 import type { ContentStudioConfig } from "./ContentStudio";
 import type { CurriculumSummary } from "../../../server/ai";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +33,7 @@ interface InteractiveTutorProps {
   onXPEarned?: (xp: number) => void;
   onBrainBreak?: () => void;
   onProceedToQuiz?: () => void;
+  onBack?: () => void;
 }
 
 // ─── Suggested prompts for ADHD-friendly engagement ──────────────────────────
@@ -47,12 +50,15 @@ const SUGGESTED_PROMPTS = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function InteractiveTutor({
+
   config,
   curriculumSummary,
   onXPEarned,
   onBrainBreak,
   onProceedToQuiz,
+  onBack,
 }: InteractiveTutorProps) {
+  const { lang: appLang } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -208,6 +214,20 @@ export function InteractiveTutor({
         style={{ borderColor: "rgba(0,229,255,0.15)", background: "rgba(15,23,42,0.95)" }}
       >
         <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+              style={{
+                background: "rgba(30,41,59,0.8)",
+                border: "1px solid rgba(0,229,255,0.25)",
+                color: "#00E5FF",
+                cursor: "pointer",
+              }}
+            >
+              ← رجوع
+            </button>
+          )}
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
@@ -217,7 +237,7 @@ export function InteractiveTutor({
           </motion.div>
           <div>
             <p className="font-black text-sm" style={{ color: "#00E5FF" }}>
-              Nova — Space Tutor
+              Nova — AI Tutor
             </p>
             <p className="text-xs" style={{ color: "#475569" }}>
               {config.focusTopic} · {config.learningStyle}
@@ -225,9 +245,11 @@ export function InteractiveTutor({
           </div>
         </div>
 
-        {/* XP Counter */}
-        <motion.div
-          key={totalXP}
+        <div className="flex items-center gap-2">
+          <LanguageToggle compact />
+          {/* XP Counter */}
+          <motion.div
+            key={totalXP}
           initial={{ scale: 1.3 }}
           animate={{ scale: 1 }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
@@ -238,52 +260,94 @@ export function InteractiveTutor({
             +{totalXP} XP
           </span>
         </motion.div>
+        </div>
       </div>
 
       {/* ── Messages ── */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Welcome message */}
-        {messages.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-8"
-          >
+        {messages.length === 0 && (() => {
+          const isAr =
+            curriculumSummary?.language === "ar" ||
+            /[\u0600-\u06FF]/.test(config.focusTopic);
+
+          const dynamicPrompts = isAr
+            ? [
+                `اشرح لي أهم فكرة في ${config.focusTopic} 💡`,
+                `لخص لي الدرس في 3 نقاط بسيطة 📝`,
+                `ما هي أهم الكلمات والمفاهيم؟ 🔍`,
+                `اسألني سؤال لتختبر فهمي 🎯`,
+              ]
+            : [
+                `Explain the main idea of ${config.focusTopic} 💡`,
+                `Summarize this into 3 simple bullet points 📝`,
+                `What are the key vocabulary words? 🔍`,
+                `Quiz me with a fun question! 🎯`,
+              ];
+
+          return (
             <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-5xl mb-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-6 px-2"
             >
-              🚀
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-5xl mb-3"
+              >
+                🤖
+              </motion.div>
+              <p className="font-black text-xl mb-1" style={{ color: "#00E5FF" }}>
+                {isAr ? "أهلاً يا بطل! أنا نوفا، معلمك الذكي 🌟" : `Hi! I'm Nova, your AI Tutor! 🌟`}
+              </p>
+              <p className="text-sm mb-4" style={{ color: "#94A3B8" }}>
+                {isAr
+                  ? `قرأت ملف: "${curriculumSummary?.title || config.focusTopic}" وجاهز لأشرحه لك!`
+                  : `I've analyzed "${curriculumSummary?.title || config.focusTopic}" and I'm ready to explain it!`}
+              </p>
+
+              {curriculumSummary?.keyTopics && curriculumSummary.keyTopics.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center mb-5 max-w-md mx-auto">
+                  {curriculumSummary.keyTopics.slice(0, 4).map((t, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 rounded-full text-xs font-semibold"
+                      style={{
+                        background: "rgba(0,229,255,0.1)",
+                        border: "1px solid rgba(0,229,255,0.3)",
+                        color: "#00E5FF",
+                      }}
+                    >
+                      📌 {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Dynamic prompts */}
+              <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
+                {dynamicPrompts.map((prompt, i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => sendMessage(prompt)}
+                    className="px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+                    style={{
+                      background: "rgba(124,77,255,0.16)",
+                      border: "1px solid rgba(124,77,255,0.4)",
+                      color: "#A78BFA",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {prompt}
+                  </motion.button>
+                ))}
+              </div>
             </motion.div>
-            <p className="font-black text-lg mb-2" style={{ color: "#00E5FF" }}>
-              Hi! I'm Nova, your Space Tutor!
-            </p>
-            <p className="text-sm mb-6" style={{ color: "#64748B" }}>
-              Ask me anything about {config.focusTopic}!
-            </p>
-            {/* Suggested prompts */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              {SUGGESTED_PROMPTS.slice(0, 4).map((prompt, i) => (
-                <motion.button
-                  key={i}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => sendMessage(prompt)}
-                  className="px-3 py-2 rounded-xl text-xs font-bold transition-all"
-                  style={{
-                    background: "rgba(124,77,255,0.12)",
-                    border: "1px solid rgba(124,77,255,0.3)",
-                    color: "#7C4DFF",
-                    cursor: "pointer",
-                  }}
-                >
-                  {prompt}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        )}
+          );
+        })()}
 
         {/* Message list */}
         <AnimatePresence>

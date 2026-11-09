@@ -29,7 +29,7 @@ describe("Planet Data", () => {
 
   it("Saturn has rings mentioned in clues", () => {
     const saturn = PLANETS.find(p => p.id === "saturn");
-    const hasRingsClue = saturn?.clues.some(c => c.toLowerCase().includes("ring"));
+    const hasRingsClue = saturn?.clues.some(c => (typeof c === "string" ? c : (c as any).en).toLowerCase().includes("ring"));
     expect(hasRingsClue).toBe(true);
   });
 
@@ -117,4 +117,5 @@ describe("Score Calculation", () => {
     expect(total).toBe(1600);
   });
 });
+
 

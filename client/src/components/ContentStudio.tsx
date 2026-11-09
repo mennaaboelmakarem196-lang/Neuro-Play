@@ -1,5 +1,5 @@
-/**
- * ContentStudio.tsx — Phase A: The Ingestion Hub
+﻿/**
+ * ContentStudio.tsx â€” Phase A: The Ingestion Hub
  *
  * Drag-and-drop curriculum upload + configuration panel for NeuroPlay AI.
  * Adheres strictly to the NeuroPlay design system:
@@ -15,7 +15,7 @@ import { useDropzone, FileRejection } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 
-// ─── Zod schema for the configuration form ───────────────────────────────────
+// â”€â”€â”€ Zod schema for the configuration form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const ContentStudioConfigSchema = z.object({
   learningStyle: z.enum([
@@ -32,7 +32,7 @@ export const ContentStudioConfigSchema = z.object({
         name: z.string(),
         size: z.number(),
         type: z.string(),
-        /** base64-encoded data URI — populated client-side before submission */
+        /** base64-encoded data URI â€” populated client-side before submission */
         dataUri: z.string().optional(),
       })
     )
@@ -41,21 +41,23 @@ export const ContentStudioConfigSchema = z.object({
 
 export type ContentStudioConfig = z.infer<typeof ContentStudioConfigSchema>;
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Props â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface ContentStudioProps {
   /** Called when the user submits the form; transitions app to Tutor phase. */
   onLaunch: (config: ContentStudioConfig) => void;
 }
 
-// ─── Accepted MIME types ──────────────────────────────────────────────────────
+// â”€â”€â”€ Accepted MIME types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ACCEPTED_TYPES: Record<string, string[]> = {
   "application/pdf": [".pdf"],
+  "application/x-pdf": [".pdf"],
+  "application/acrobat": [".pdf"],
+  "applications/vnd.pdf": [".pdf"],
+  "text/pdf": [".pdf"],
   "text/plain": [".txt"],
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
-    ".docx",
-  ],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
   "application/msword": [".doc"],
   "image/png": [".png"],
   "image/jpeg": [".jpg", ".jpeg"],
@@ -65,7 +67,7 @@ const ACCEPTED_TYPES: Record<string, string[]> = {
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
-// ─── Difficulty options ───────────────────────────────────────────────────────
+// â”€â”€â”€ Difficulty options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const DIFFICULTY_OPTIONS: Array<{
   value: ContentStudioConfig["difficulty"];
@@ -77,27 +79,27 @@ const DIFFICULTY_OPTIONS: Array<{
   {
     value: "Easy",
     label: "Easy",
-    emoji: "🌱",
+    emoji: "ðŸŒ±",
     color: "#AEEA00",
     glow: "rgba(174,234,0,0.35)",
   },
   {
     value: "Medium",
     label: "Medium",
-    emoji: "⚡",
+    emoji: "âš¡",
     color: "#00E5FF",
     glow: "rgba(0,229,255,0.35)",
   },
   {
     value: "Boss Level",
     label: "Boss Level",
-    emoji: "🔥",
+    emoji: "ðŸ”¥",
     color: "#7C4DFF",
     glow: "rgba(124,77,255,0.35)",
   },
 ];
 
-// ─── Learning style options ───────────────────────────────────────────────────
+// â”€â”€â”€ Learning style options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const LEARNING_STYLES: ContentStudioConfig["learningStyle"][] = [
   "ADHD Socratic",
@@ -111,31 +113,31 @@ const LEARNING_STYLE_META: Record<
   { emoji: string; hint: string }
 > = {
   "ADHD Socratic": {
-    emoji: "🧠",
-    hint: "Short questions, one at a time — keeps focus sharp.",
+    emoji: "ðŸ§ ",
+    hint: "Short questions, one at a time â€” keeps focus sharp.",
   },
   Storytelling: {
-    emoji: "📖",
+    emoji: "ðŸ“–",
     hint: "Concepts wrapped in a fun space adventure story.",
   },
   "Bullet Points Only": {
-    emoji: "📋",
+    emoji: "ðŸ“‹",
     hint: "Ultra-clean facts, no fluff, easy to scan.",
   },
   Gamified: {
-    emoji: "🎮",
+    emoji: "ðŸŽ®",
     hint: "XP, badges, and boss battles for every concept.",
   },
 };
 
-// ─── File icon helper ─────────────────────────────────────────────────────────
+// â”€â”€â”€ File icon helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function fileIcon(mime: string): string {
-  if (mime === "application/pdf") return "📄";
-  if (mime.startsWith("image/")) return "🖼️";
-  if (mime.includes("word")) return "📝";
-  if (mime === "text/plain") return "📃";
-  return "📎";
+  if (mime === "application/pdf") return "ðŸ“„";
+  if (mime.startsWith("image/")) return "ðŸ–¼ï¸";
+  if (mime.includes("word")) return "ðŸ“";
+  if (mime === "text/plain") return "ðŸ“ƒ";
+  return "ðŸ“Ž";
 }
 
 function humanSize(bytes: number): string {
@@ -144,7 +146,7 @@ function humanSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ─── Starfield background particles ──────────────────────────────────────────
+// â”€â”€â”€ Starfield background particles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const STAR_SEEDS = Array.from({ length: 28 }, (_, i) => ({
   id: i,
@@ -156,7 +158,7 @@ const STAR_SEEDS = Array.from({ length: 28 }, (_, i) => ({
   color: ["#00E5FF", "#7C4DFF", "#AEEA00", "#ffffff"][i % 4],
 }));
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function ContentStudio({ onLaunch }: ContentStudioProps) {
   // Form state
@@ -171,19 +173,37 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
   const [isLaunching, setIsLaunching] = useState(false);
   const [topicFocused, setTopicFocused] = useState(false);
 
-  // ── Dropzone ────────────────────────────────────────────────────────────────
+  // â”€â”€ Dropzone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const onDrop = useCallback(
     (accepted: File[], rejected: FileRejection[]) => {
+      const salvaged: File[] = [];
+      const stillRejected: FileRejection[] = [];
+
+      for (const rej of rejected) {
+        const name = rej.file.name.toLowerCase();
+        if (name.endsWith(".pdf") || name.endsWith(".txt") || name.endsWith(".docx")) {
+          salvaged.push(rej.file);
+        } else {
+          stillRejected.push(rej);
+        }
+      }
+
+      const allAccepted = [...accepted, ...salvaged];
+
       setFiles((prev) => {
         const existingNames = new Set(prev.map((f) => f.name));
-        const fresh = accepted.filter((f) => !existingNames.has(f.name));
+        const fresh = allAccepted.filter((f) => !existingNames.has(f.name));
         return [...prev, ...fresh];
       });
-      setRejections(rejected);
-      if (rejected.length === 0) {
-        setErrors((prev) => ({ ...prev, files: undefined }));
+
+      if (allAccepted.length > 0) {
+        const cleanName = allAccepted[0].name.replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ");
+        setFocusTopic((curr) => (curr.trim() && !curr.toLowerCase().includes("solar") ? curr : cleanName));
+        setErrors({});
       }
+
+      setRejections(stillRejected);
     },
     []
   );
@@ -199,12 +219,15 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
   const removeFile = (name: string) =>
     setFiles((prev) => prev.filter((f) => f.name !== name));
 
-  // ── Validation & submit ─────────────────────────────────────────────────────
+  // â”€â”€ Validation & submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const validate = (): boolean => {
     const errs: Partial<Record<string, string>> = {};
-    if (!focusTopic.trim()) {
-      errs.focusTopic = "Please enter a topic or chapter name.";
+    const effectiveTopic = focusTopic.trim() || (files[0] ? files[0].name.replace(/\.[^/.]+$/, "").replace(/[-_]+/g, " ") : "");
+    if (!effectiveTopic) {
+      errs.focusTopic = "يرجى كتابة اسم الموضوع أو اختيار ملف PDF.";
+    } else if (!focusTopic.trim()) {
+      setFocusTopic(effectiveTopic);
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -219,7 +242,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
       files.map(
         (f) =>
           new Promise<ContentStudioConfig["files"][number]>((resolve) => {
-            if (f.size <= 2 * 1024 * 1024) {
+            if (f.size <= MAX_FILE_SIZE) {
               const reader = new FileReader();
               reader.onload = () =>
                 resolve({
@@ -252,7 +275,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
     }, 900);
   };
 
-  // ── Derived UI state ────────────────────────────────────────────────────────
+  // â”€â”€ Derived UI state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const dropBorderColor = isDragReject
     ? "#ff4444"
@@ -276,14 +299,14 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
     ? "rgba(255,68,68,0.06)"
     : "rgba(30,41,59,0.6)";
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div
       className="min-h-screen star-field flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden"
       style={{ background: "#0F172A" }}
     >
-      {/* ── Starfield particles ── */}
+      {/* â”€â”€ Starfield particles â”€â”€ */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {STAR_SEEDS.map((s) => (
           <div
@@ -303,7 +326,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
         ))}
       </div>
 
-      {/* ── Ambient glow orbs ── */}
+      {/* â”€â”€ Ambient glow orbs â”€â”€ */}
       <div
         className="absolute pointer-events-none"
         style={{
@@ -329,7 +352,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
         }}
       />
 
-      {/* ── Main card ── */}
+      {/* â”€â”€ Main card â”€â”€ */}
       <motion.div
         initial={{ opacity: 0, y: 36 }}
         animate={{ opacity: 1, y: 0 }}
@@ -343,7 +366,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
             transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             className="text-5xl mb-1"
           >
-            🛸
+            ðŸ›¸
           </motion.div>
           <h1
             className="text-3xl sm:text-4xl font-black text-glow-cyan"
@@ -362,11 +385,11 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
               color: "#7C4DFF",
             }}
           >
-            Upload your curriculum &amp; configure your Space Tutor 🚀
+            Upload your curriculum &amp; configure your Space Tutor ðŸš€
           </p>
         </div>
 
-        {/* ── Upload Zone ── */}
+        {/* â”€â”€ Upload Zone â”€â”€ */}
         <motion.section
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -395,7 +418,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                   exit={{ scale: 0.8, opacity: 0 }}
                   className="flex flex-col items-center gap-3 text-center"
                 >
-                  <span className="text-5xl animate-bounce-in">🌌</span>
+                  <span className="text-5xl animate-bounce-in">ðŸŒŒ</span>
                   <p
                     className="text-xl font-black"
                     style={{
@@ -414,7 +437,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                   exit={{ scale: 0.8, opacity: 0 }}
                   className="flex flex-col items-center gap-3 text-center"
                 >
-                  <span className="text-5xl">🚫</span>
+                  <span className="text-5xl">ðŸš«</span>
                   <p
                     className="text-lg font-bold"
                     style={{
@@ -442,7 +465,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                       ease: "easeInOut",
                     }}
                   >
-                    📡
+                    ðŸ“¡
                   </motion.span>
                   <div>
                     <p
@@ -519,13 +542,54 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
               >
                 {rejections.map((r) => (
                   <p key={r.file.name}>
-                    ⚠️ {r.file.name}:{" "}
+                    âš ï¸ {r.file.name}:{" "}
                     {r.errors.map((e) => e.message).join(", ")}
                   </p>
                 ))}
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Instant Launch Action when File is Uploaded */}
+          {files.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-3 p-3 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3"
+              style={{
+                background: "linear-gradient(135deg, rgba(0,229,255,0.15), rgba(124,77,255,0.15))",
+                border: "2px solid #00E5FF",
+                boxShadow: "0 0 25px rgba(0,229,255,0.25)",
+              }}
+            >
+              <div className="flex items-center gap-2 text-center sm:text-right">
+                <span className="text-2xl">📄</span>
+                <div>
+                  <p className="text-sm font-black text-white">
+                    تم استلام الملف: {files[0].name}
+                  </p>
+                  <p className="text-xs text-cyan-300">
+                    جاهز للتحليل والشرح فوراً مع نوفا!
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLaunch}
+                disabled={isLaunching}
+                className="px-5 py-2.5 rounded-xl font-black text-sm transition-all"
+                style={{
+                  background: "linear-gradient(135deg, #00E5FF, #7C4DFF)",
+                  color: "#0F172A",
+                  cursor: isLaunching ? "not-allowed" : "pointer",
+                  border: "none",
+                }}
+              >
+                {isLaunching ? "جاري التحليل... ⏳" : "🚀 ابدأ الشرح الآن مع نوفا!"}
+              </motion.button>
+            </motion.div>
+          )}
 
           {/* Accepted file list */}
           <AnimatePresence>
@@ -593,7 +657,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                           "rgba(255,68,68,0.15)";
                       }}
                     >
-                      ✕
+                      âœ•
                     </button>
                   </motion.li>
                 ))}
@@ -602,7 +666,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
           </AnimatePresence>
         </motion.section>
 
-        {/* ── Configuration Panel ── */}
+        {/* â”€â”€ Configuration Panel â”€â”€ */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -622,10 +686,10 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
               color: "#7C4DFF",
             }}
           >
-            <span>⚙️</span> Mission Configuration
+            <span>âš™ï¸</span> Mission Configuration
           </h2>
 
-          {/* ── Learning Style ── */}
+          {/* â”€â”€ Learning Style â”€â”€ */}
           <div className="flex flex-col gap-2">
             <label
               htmlFor="learning-style"
@@ -635,7 +699,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                 color: "#94A3B8",
               }}
             >
-              🧩 Learning Style
+              ðŸ§© Learning Style
             </label>
             <div className="relative">
               <select
@@ -681,7 +745,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                 className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs"
                 style={{ color: "#7C4DFF" }}
               >
-                ▼
+                â–¼
               </span>
             </div>
             {/* Hint */}
@@ -704,7 +768,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
             </AnimatePresence>
           </div>
 
-          {/* ── Focus Topic ── */}
+          {/* â”€â”€ Focus Topic â”€â”€ */}
           <div className="flex flex-col gap-2">
             <label
               htmlFor="focus-topic"
@@ -714,7 +778,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                 color: "#94A3B8",
               }}
             >
-              🔭 Focus Topic / Chapter
+              ðŸ”­ Focus Topic / Chapter
             </label>
             <input
               id="focus-topic"
@@ -728,7 +792,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
               }}
               onFocus={() => setTopicFocused(true)}
               onBlur={() => setTopicFocused(false)}
-              placeholder="e.g. The Solar System, Chapter 3 — Planets"
+              placeholder="e.g. The Solar System, Chapter 3 â€” Planets"
               maxLength={120}
               className="w-full px-4 py-3 rounded-2xl text-sm font-bold outline-none transition-all duration-200"
               style={{
@@ -759,13 +823,13 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                     color: "#ff6b6b",
                   }}
                 >
-                  ⚠️ {errors.focusTopic}
+                  âš ï¸ {errors.focusTopic}
                 </motion.p>
               )}
             </AnimatePresence>
           </div>
 
-          {/* ── Difficulty Level ── */}
+          {/* â”€â”€ Difficulty Level â”€â”€ */}
           <div className="flex flex-col gap-2">
             <p
               className="text-sm font-bold"
@@ -774,7 +838,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                 color: "#94A3B8",
               }}
             >
-              🎯 Difficulty Level
+              ðŸŽ¯ Difficulty Level
             </p>
             <div
               className="grid grid-cols-3 gap-3"
@@ -829,7 +893,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                         className="text-xs font-bold"
                         style={{ color: opt.color }}
                       >
-                        ✓
+                        âœ“
                       </motion.span>
                     )}
                   </motion.button>
@@ -839,7 +903,7 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
           </div>
         </motion.section>
 
-        {/* ── Launch CTA ── */}
+        {/* â”€â”€ Launch CTA â”€â”€ */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -893,12 +957,12 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
                   transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
                   className="inline-block"
                 >
-                  🛸
+                  ðŸ›¸
                 </motion.span>
-                Launching…
+                Launchingâ€¦
               </span>
             ) : (
-              <span className="relative z-10">Launch Space Tutor 🚀</span>
+              <span className="relative z-10">Launch Space Tutor ðŸš€</span>
             )}
           </motion.button>
 
@@ -910,10 +974,11 @@ export function ContentStudio({ onLaunch }: ContentStudioProps) {
               color: "#334155",
             }}
           >
-            Files are optional — the tutor can work from your topic alone ✨
+            Files are optional â€” the tutor can work from your topic alone âœ¨
           </p>
         </motion.div>
       </motion.div>
     </div>
   );
 }
+

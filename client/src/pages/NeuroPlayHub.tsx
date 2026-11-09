@@ -1,5 +1,5 @@
-/**
- * NeuroPlayHub.tsx — The Unified NeuroPlay AI Experience
+﻿/**
+ * NeuroPlayHub.tsx â€” The Unified NeuroPlay AI Experience
  *
  * Orchestrates the full hackathon workflow:
  *  Phase A: ContentStudio (Ingestion Hub)
@@ -14,6 +14,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ContentStudio, type ContentStudioConfig } from "@/components/ContentStudio";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { InteractiveTutor } from "@/components/InteractiveTutor";
 import { AssessmentArena, type QuizResult } from "@/components/AssessmentArena";
 import { AuditDashboard } from "@/components/AuditDashboard";
@@ -42,6 +44,7 @@ interface HubState {
 }
 
 export default function NeuroPlayHub() {
+  const { lang, isRTL } = useLanguage();
   const [state, setState] = useState<HubState>({
     phase: "hub",
     config: null,
@@ -63,18 +66,25 @@ export default function NeuroPlayHub() {
     setState(prev => ({ ...prev, phase: "processing", config }));
 
     try {
-      // Extract text from files if any
+      // Find PDF file if any
+      const pdfFile = config.files.find(
+        f => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+      );
+      const pdfBase64 = pdfFile?.dataUri;
+
+      // Extract text from other files if any
       let rawText: string | undefined;
-      if (config.files.length > 0) {
-        rawText = config.files
-          .filter(f => f.dataUri)
-          .map(f => `[File: ${f.name}]`)
-          .join("\n");
+      const otherFiles = config.files.filter(
+        f => !f.name.toLowerCase().endsWith(".pdf") && f.dataUri
+      );
+      if (otherFiles.length > 0) {
+        rawText = otherFiles.map(f => `[File: ${f.name}]`).join("\n");
       }
 
       const summary = await processContent.mutateAsync({
         topic: config.focusTopic,
         rawText,
+        pdfBase64,
         learningStyle: config.learningStyle,
         difficulty: config.difficulty,
       });
@@ -132,7 +142,7 @@ export default function NeuroPlayHub() {
     }, 1000);
   };
 
-  // ── Brain Break Overlay ──────────────────────────────────────────────────
+  // â”€â”€ Brain Break Overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (brainBreakActive) {
     return (
       <div
@@ -151,18 +161,18 @@ export default function NeuroPlayHub() {
             border: "3px solid rgba(0,229,255,0.5)",
           }}
         >
-          <span className="text-5xl">🧠</span>
+          <span className="text-5xl">ðŸ§ </span>
         </motion.div>
 
         <div className="text-center">
           <p className="font-black text-2xl mb-2" style={{ color: "#00E5FF" }}>
-            Brain Break Time! 🌟
+            Brain Break Time! ðŸŒŸ
           </p>
           <p className="text-base mb-1" style={{ color: "#94A3B8" }}>
-            Jump in place 5 times! 🦘
+            Jump in place 5 times! ðŸ¦˜
           </p>
           <p className="text-sm" style={{ color: "#475569" }}>
-            Then take 3 deep breaths 🌬️
+            Then take 3 deep breaths ðŸŒ¬ï¸
           </p>
         </div>
 
@@ -191,7 +201,7 @@ export default function NeuroPlayHub() {
             cursor: "pointer",
           }}
         >
-          Skip Break →
+          Skip Break â†’
         </button>
       </div>
     );
@@ -199,11 +209,15 @@ export default function NeuroPlayHub() {
 
   return (
     <div
-      className="min-h-screen"
-      style={{ background: "#0F172A", fontFamily: "'Comfortaa', sans-serif" }}
+      className="min-h-screen relative"
+      style={{ background: "#0F172A", fontFamily: lang === "ar" ? "'Cairo', sans-serif" : "'Comfortaa', sans-serif" }}
     >
+      {/* Floating Language Switcher */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <LanguageToggle />
+      </div>
       <AnimatePresence mode="wait">
-        {/* ── Hub Mode Selector ── */}
+        {/* â”€â”€ Hub Mode Selector â”€â”€ */}
         {state.phase === "hub" && (
           <motion.div
             key="hub"
@@ -218,34 +232,87 @@ export default function NeuroPlayHub() {
                 transition={{ duration: 3, repeat: Infinity }}
                 className="text-6xl mb-4"
               >
-                🚀
+                ðŸš€
               </motion.div>
               <h1 className="font-black text-3xl mb-2" style={{ color: "#00E5FF" }}>
                 NeuroPlay AI
               </h1>
               <p className="text-sm" style={{ color: "#475569" }}>
-                FocusArcade · Solar System Lab
+                FocusArcade Â· Solar System Lab
               </p>
             </div>
 
             <div className="w-full max-w-sm space-y-3">
-              {/* AI Tutor Mode */}
+              {/* Direct Nova AI Chat */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setState(prev => ({ ...prev, phase: "ingestion" }))}
-                className="w-full py-5 rounded-2xl font-black text-base transition-all"
+                onClick={() =>
+                  setState(prev => ({
+                    ...prev,
+                    phase: "tutor",
+                    config: {
+                      focusTopic: lang === "ar" ? "المعلم الذكي نوفا" : "Nova AI Tutor",
+                      learningStyle: "ADHD Socratic",
+                      difficulty: "Easy",
+                      files: [],
+                    },
+                    curriculumSummary: {
+                      title: lang === "ar" ? "المعلم الذكي نوفا (Nova AI)" : "Nova AI Tutor",
+                      gradeLevel: lang === "ar" ? "الأعمار 7-10 (مُهيأ لفرط الحركة والتركيز)" : "Ages 7-10 (ADHD-Friendly)",
+                      keyTopics: lang === "ar"
+                        ? ["شرح أي مادة أو درس", "تلخيص المفاهيم والمذكرات", "أسئلة وتحديات ممتعة"]
+                        : ["Explaining any lesson", "Summarizing key concepts", "Fun quiz challenges"],
+                      learningObjectives: lang === "ar"
+                        ? ["التعلم بأسلوب مرح وتفاعلي سريع"]
+                        : ["Engaging, bite-sized ADHD-friendly learning"],
+                      funFacts: lang === "ar"
+                        ? ["نوفا جاهز لمساعدتك وشرح أي موضوع تريده بأسلوب مبسط جداً! 🌟"]
+                        : ["Nova is ready to explain any topic in simple, fun micro-steps! 🌟"],
+                      vocabularyWords: lang === "ar"
+                        ? [
+                            { word: "نوفا", definition: "معلمك ومساعدك الذكي في رحلتك التعليمية", emoji: "🤖" },
+                            { word: "التعلم السريع", definition: "تقسيم المعلومات لقطع صغيرة ممتعة وسهلة الحفظ", emoji: "⚡" },
+                          ]
+                        : [
+                            { word: "Nova", definition: "Your superhero AI learning companion", emoji: "🤖" },
+                            { word: "Micro-learning", definition: "Bite-sized steps designed for hyper-focus", emoji: "⚡" },
+                          ],
+                      language: lang,
+                    },
+                  }))
+                }
+                className="w-full py-4 rounded-2xl font-black text-base transition-all"
                 style={{
                   background: "linear-gradient(135deg, #00E5FF 0%, #7C4DFF 100%)",
                   color: "#0F172A",
                   border: "none",
                   cursor: "pointer",
-                  boxShadow: "0 0 30px rgba(0,229,255,0.3)",
+                  boxShadow: "0 0 30px rgba(0,229,255,0.35)",
                 }}
               >
-                🤖 AI Tutor Mode
+                {lang === "ar" ? "🤖 ابدأ التحدث مع نوفا الآن (Nova AI)" : "🤖 Start Chatting with Nova (Nova AI)"}
+                <p className="text-xs font-normal mt-1 opacity-80">
+                  {lang === "ar" ? "محادثة تعليمية ذكية وشرح فوري ومباشر" : "Smart interactive tutoring & instant explanation"}
+                </p>
+              </motion.button>
+
+              {/* Upload PDF */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setState(prev => ({ ...prev, phase: "ingestion" }))}
+                className="w-full py-4 rounded-2xl font-black text-base transition-all"
+                style={{
+                  background: "rgba(30,41,59,0.9)",
+                  border: "1px solid rgba(0,229,255,0.4)",
+                  color: "#00E5FF",
+                  cursor: "pointer",
+                }}
+              >
+                {lang === "ar" ? "📄 رفع وشرح ملف PDF" : "📄 Upload & Explain PDF"}
                 <p className="text-xs font-normal mt-1 opacity-70">
-                  Content Studio → Nova Tutor → Quiz Arena
+                  {lang === "ar" ? "رفع درس أو مذكرة ليقرأها نوفا ويشرحها لك" : "Upload notes or textbook for Nova to explain"}
                 </p>
               </motion.button>
 
@@ -254,29 +321,28 @@ export default function NeuroPlayHub() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setState(prev => ({ ...prev, phase: "spacelab" }))}
-                className="w-full py-5 rounded-2xl font-black text-base transition-all"
+                className="w-full py-4 rounded-2xl font-black text-base transition-all"
                 style={{
-                  background: "linear-gradient(135deg, #7C4DFF 0%, #AEEA00 100%)",
-                  color: "#0F172A",
-                  border: "none",
+                  background: "rgba(30,41,59,0.7)",
+                  border: "1px solid rgba(174,234,0,0.3)",
+                  color: "#AEEA00",
                   cursor: "pointer",
-                  boxShadow: "0 0 30px rgba(174,234,0,0.2)",
                 }}
               >
-                🪐 SpaceLab Game
+                {lang === "ar" ? "🪐 لعبة SpaceLab" : "🪐 SpaceLab Game"}
                 <p className="text-xs font-normal mt-1 opacity-70">
-                  Drag-and-drop Solar System adventure
+                  {lang === "ar" ? "مغامرة كواكب المجموعة الشمسية" : "Drag-and-drop Solar System adventure"}
                 </p>
               </motion.button>
             </div>
 
             <p className="text-xs text-center" style={{ color: "#334155" }}>
-              ADHD-optimized · Ages 7-10 · Solar System Module
+              ADHD-optimized Â· Ages 7-10 Â· Solar System Module
             </p>
           </motion.div>
         )}
 
-        {/* ── ContentStudio (Ingestion) ── */}
+        {/* â”€â”€ ContentStudio (Ingestion) â”€â”€ */}
         {state.phase === "ingestion" && (
           <motion.div
             key="ingestion"
@@ -289,7 +355,7 @@ export default function NeuroPlayHub() {
           </motion.div>
         )}
 
-        {/* ── Processing ── */}
+        {/* â”€â”€ Processing â”€â”€ */}
         {state.phase === "processing" && (
           <motion.div
             key="processing"
@@ -303,14 +369,14 @@ export default function NeuroPlayHub() {
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               className="text-6xl"
             >
-              🛸
+              ðŸ›¸
             </motion.div>
             <div className="text-center">
               <p className="font-black text-xl mb-2" style={{ color: "#00E5FF" }}>
                 Processing Curriculum...
               </p>
               <p className="text-sm" style={{ color: "#475569" }}>
-                Nova is reading your content! ✨
+                Nova is reading your content! âœ¨
               </p>
             </div>
             <div className="w-48 h-2 rounded-full overflow-hidden" style={{ background: "rgba(30,41,59,0.8)" }}>
@@ -324,7 +390,7 @@ export default function NeuroPlayHub() {
           </motion.div>
         )}
 
-        {/* ── Interactive Tutor ── */}
+        {/* â”€â”€ Interactive Tutor â”€â”€ */}
         {state.phase === "tutor" && state.config && (
           <motion.div
             key="tutor"
@@ -339,11 +405,12 @@ export default function NeuroPlayHub() {
               onXPEarned={xp => setState(prev => ({ ...prev, totalXP: prev.totalXP + xp }))}
               onBrainBreak={triggerBrainBreak}
               onProceedToQuiz={() => setState(prev => ({ ...prev, phase: "quiz" }))}
+              onBack={() => setState(prev => ({ ...prev, phase: "hub" }))}
             />
           </motion.div>
         )}
 
-        {/* ── Assessment Arena ── */}
+        {/* â”€â”€ Assessment Arena â”€â”€ */}
         {state.phase === "quiz" && state.config && (
           <motion.div
             key="quiz"
@@ -363,7 +430,7 @@ export default function NeuroPlayHub() {
           </motion.div>
         )}
 
-        {/* ── Completion Screen ── */}
+        {/* â”€â”€ Completion Screen â”€â”€ */}
         {state.phase === "complete" && state.quizResult && (
           <motion.div
             key="complete"
@@ -377,7 +444,7 @@ export default function NeuroPlayHub() {
               transition={{ duration: 2, repeat: Infinity }}
               className="text-7xl"
             >
-              {state.quizResult.score >= 90 ? "🏆" : state.quizResult.score >= 70 ? "⭐" : "🌱"}
+              {state.quizResult.score >= 90 ? "ðŸ†" : state.quizResult.score >= 70 ? "â­" : "ðŸŒ±"}
             </motion.div>
 
             <div className="text-center">
@@ -385,7 +452,7 @@ export default function NeuroPlayHub() {
                 Module Complete!
               </p>
               <p className="text-sm" style={{ color: "#64748B" }}>
-                {state.studentName} · {state.config?.focusTopic}
+                {state.studentName} Â· {state.config?.focusTopic}
               </p>
             </div>
 
@@ -411,7 +478,7 @@ export default function NeuroPlayHub() {
 
             <div className="space-y-2 w-full max-w-sm">
               <p className="text-xs text-center" style={{ color: "#334155" }}>
-                🎉 Dopamine Report sent! 📊 Focus metrics logged! 📅 Pomodoro scheduled!
+                ðŸŽ‰ Dopamine Report sent! ðŸ“Š Focus metrics logged! ðŸ“… Pomodoro scheduled!
               </p>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -434,13 +501,13 @@ export default function NeuroPlayHub() {
                   boxShadow: "0 0 30px rgba(0,229,255,0.3)",
                 }}
               >
-                Play Again 🚀
+                Play Again ðŸš€
               </motion.button>
             </div>
           </motion.div>
         )}
 
-        {/* ── SpaceLab Game ── */}
+        {/* â”€â”€ SpaceLab Game â”€â”€ */}
         {state.phase === "spacelab" && (
           <motion.div
             key="spacelab"
@@ -459,3 +526,4 @@ export default function NeuroPlayHub() {
     </div>
   );
 }
+
